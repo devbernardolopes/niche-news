@@ -278,6 +278,7 @@
         <h1 class="text-5xl leading-tight mb-4" style="color: var(--text)">
           Briefr
         </h1>
+        <div id="kofi-widget" class="mb-4"></div>
         <p class="text-base leading-relaxed" style="color: var(--muted)">
           <span data-i18n="subtitle"
             >Select your professional field and get an instant digest of today's
@@ -476,14 +477,11 @@
 
       <!-- Footer -->
       <footer class="mt-16 pt-6" style="border-top: 1px solid var(--border)">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <p class="mono text-xs" style="color: var(--muted)">
-            <span data-i18n="footer"
-              >Powered by Google News RSS · No tracking · No paywall</span
-            >
-          </p>
-          <div id="kofi-widget"></div>
-        </div>
+        <p class="mono text-xs" style="color: var(--muted)">
+          <span data-i18n="footer"
+            >Powered by Google News RSS · No tracking · No paywall</span
+          >
+        </p>
       </footer>
     </div>
 
@@ -539,8 +537,11 @@
       // CORS proxy list — tried in order until one works
       const PROXIES = [
         {
-          build: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-          extract: async (res) => res.text(),
+          // rss2json: dedicated RSS service, returns JSON with clean entries
+          build: (url) =>
+            `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=50`,
+          extract: async (res) => res, // handled via isRss2json path
+          isRss2json: true,
         },
         {
           build: (url) =>
@@ -551,8 +552,7 @@
           },
         },
         {
-          build: (url) =>
-            `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`,
+          build: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
           extract: async (res) => res.text(),
         },
       ];
@@ -1070,7 +1070,7 @@
     ></script>
     <script type="text/javascript">
       kofiwidget2.init("Support me on Ko-fi", "#72a4f2", "V7V21OVINK");
-      document.getElementById("kofi-widget").innerHTML = kofiwidget2.draw();
+      kofiwidget2.draw();
     </script>
   </body>
 </html>
