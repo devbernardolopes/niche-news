@@ -598,7 +598,9 @@
           fetch_failed: "All proxies failed. Last error:",
           error_label: "Error",
           cors_note:
-            "Note: Some browsers block CORS requests when opening HTML files directly (file://). Try serving via a local server (e.g. npx serve . in VS Code terminal).",
+            window.location.protocol === "file:"
+              ? "Note: You are opening this file directly. Try serving via a local server (e.g. npx serve . in VS Code terminal)."
+              : "This may be a temporary issue with the news proxy. Please try again in a few seconds.",
         },
         "pt-BR": {
           tagline: "Inteligência Matinal",
@@ -632,7 +634,9 @@
           fetch_failed: "Todos os proxies falharam. Último erro:",
           error_label: "Erro",
           cors_note:
-            "Nota: Alguns navegadores bloqueiam requisições CORS ao abrir arquivos HTML diretamente (file://). Tente servir via servidor local (ex: npx serve . no terminal do VS Code).",
+            window.location.protocol === "file:"
+              ? "Nota: Você está abrindo o arquivo diretamente. Tente servir via servidor local (ex: npx serve . no terminal do VS Code)."
+              : "Isso pode ser um problema temporário com o proxy de notícias. Por favor, tente novamente em alguns segundos.",
         },
       };
 
@@ -728,7 +732,7 @@
         for (const proxy of PROXIES) {
           try {
             const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 8000);
+            const timer = setTimeout(() => controller.abort(), 15000);
             let res;
             try {
               res = await fetch(proxy.build(rssUrl), {
