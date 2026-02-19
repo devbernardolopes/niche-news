@@ -223,6 +223,20 @@
             class="mono text-xs tracking-widest uppercase block mb-3"
             style="color: var(--muted)"
           >
+            Language
+          </label>
+          <select
+            id="langSelect"
+            class="custom-select w-full rounded-sm px-4 py-3 mb-6"
+          >
+            <option value="en-US">🇺🇸 English (US)</option>
+            <option value="pt-BR">🇧🇷 Português (Brasil)</option>
+          </select>
+
+          <label
+            class="mono text-xs tracking-widest uppercase block mb-3"
+            style="color: var(--muted)"
+          >
             Professional Field
           </label>
           <select
@@ -230,28 +244,61 @@
             class="custom-select w-full rounded-sm px-4 py-3 mb-6"
           >
             <option value="" disabled selected>— Choose your field —</option>
-            <option value="law legal">⚖️ Law &amp; Legal</option>
-            <option value="technology artificial intelligence software">
+            <option data-en="law legal" data-pt="direito juridico legislacao">
+              ⚖️ Law &amp; Legal
+            </option>
+            <option
+              data-en="technology artificial intelligence software"
+              data-pt="tecnologia inteligencia artificial software"
+            >
               💻 Technology &amp; AI
             </option>
-            <option value="finance investing markets economy">
+            <option
+              data-en="finance investing markets economy"
+              data-pt="financas investimentos mercado economia"
+            >
               📈 Finance &amp; Markets
             </option>
-            <option value="healthcare medicine pharmaceutical">
+            <option
+              data-en="healthcare medicine pharmaceutical"
+              data-pt="saude medicina farmaceutica"
+            >
               🏥 Healthcare &amp; Medicine
             </option>
-            <option value="marketing advertising brand">
+            <option
+              data-en="marketing advertising brand"
+              data-pt="marketing publicidade marca"
+            >
               📣 Marketing &amp; Advertising
             </option>
-            <option value="real estate property housing">🏢 Real Estate</option>
-            <option value="cybersecurity data privacy">🔐 Cybersecurity</option>
-            <option value="startups venture capital entrepreneurship">
+            <option
+              data-en="real estate property housing"
+              data-pt="imoveis mercado imobiliario habitacao"
+            >
+              🏢 Real Estate
+            </option>
+            <option
+              data-en="cybersecurity data privacy"
+              data-pt="ciberseguranca privacidade dados"
+            >
+              🔐 Cybersecurity
+            </option>
+            <option
+              data-en="startups venture capital entrepreneurship"
+              data-pt="startups capital de risco empreendedorismo"
+            >
               🚀 Startups &amp; VC
             </option>
-            <option value="energy climate sustainability">
+            <option
+              data-en="energy climate sustainability"
+              data-pt="energia clima sustentabilidade"
+            >
               🌱 Energy &amp; Sustainability
             </option>
-            <option value="human resources hiring workforce">
+            <option
+              data-en="human resources hiring workforce"
+              data-pt="recursos humanos contratacao mercado de trabalho"
+            >
               👥 HR &amp; Workforce
             </option>
           </select>
@@ -349,10 +396,25 @@
       ];
 
       // ─── DOM refs ─────────────────────────────────────────────────────────────
+      const langSelect = document.getElementById("langSelect");
       const topicSelect = document.getElementById("topicSelect");
       const timeSelect = document.getElementById("timeSelect");
       const fetchBtn = document.getElementById("fetchBtn");
       const resultsEl = document.getElementById("results");
+
+      // Auto-detect browser language
+      (function detectLang() {
+        const lang = (
+          navigator.language ||
+          navigator.userLanguage ||
+          "en-US"
+        ).toLowerCase();
+        if (lang.startsWith("pt")) {
+          langSelect.value = "pt-BR";
+        } else {
+          langSelect.value = "en-US";
+        }
+      })();
 
       topicSelect.addEventListener("change", () => {
         fetchBtn.disabled = !topicSelect.value;
@@ -383,11 +445,23 @@
       }
 
       // ─── Fetch & parse Google News RSS ────────────────────────────────────────
-      async function fetchGoogleNews(query) {
+      async function fetchGoogleNews(q) {
         // Pass 'when' param to Google News so filtering happens at the source too
+        const lang = langSelect.value;
+        const selectedOpt = topicSelect.options[topicSelect.selectedIndex];
+        const query =
+          lang === "pt-BR"
+            ? selectedOpt.getAttribute("data-pt")
+            : selectedOpt.getAttribute("data-en") || q;
         const maxDays = parseInt(timeSelect.value);
         const whenParam = maxDays > 0 ? `&when=${maxDays}d` : "";
-        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}${whenParam}&hl=en-US&gl=US&ceid=US:en`;
+        // Map language selection to Google News locale params
+        const langMap = {
+          "en-US": { hl: "en-US", gl: "US", ceid: "US:en" },
+          "pt-BR": { hl: "pt-BR", gl: "BR", ceid: "BR:pt-419" },
+        };
+        const locale = langMap[langSelect.value] || langMap["en-US"];
+        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}${whenParam}&hl=${locale.hl}&gl=${locale.gl}&ceid=${locale.ceid}`;
 
         let xmlText = null;
         let lastError = "";
@@ -433,7 +507,13 @@
       // ─── Ranking algorithm ────────────────────────────────────────────────────
       function rankAndPick(items, n) {
         const now = Date.now();
-        const topic = topicSelect.value.toLowerCase();
+        const lang = langSelect.value;
+        const selectedOpt = topicSelect.options[topicSelect.selectedIndex];
+        const topic = (
+          lang === "pt-BR"
+            ? selectedOpt.getAttribute("data-pt")
+            : selectedOpt.getAttribute("data-en") || topicSelect.value
+        ).toLowerCase();
         const topicTerms = topic.split(/\s+/);
         const maxDays = parseInt(timeSelect.value);
         const maxAgeMs = maxDays > 0 ? maxDays * 24 * 60 * 60 * 1000 : Infinity;
