@@ -201,6 +201,7 @@
         <p
           class="mono text-xs tracking-widest uppercase mb-3"
           style="color: var(--accent)"
+          data-i18n="tagline"
         >
           Morning Intelligence
         </p>
@@ -208,8 +209,10 @@
           Briefr
         </h1>
         <p class="text-base leading-relaxed" style="color: var(--muted)">
-          Select your professional field and get an instant digest of today's
-          most relevant headlines — distilled to 3 key stories.
+          <span data-i18n="subtitle"
+            >Select your professional field and get an instant digest of today's
+            most relevant headlines — distilled to 3 key stories.</span
+          >
         </p>
       </header>
 
@@ -223,7 +226,7 @@
             class="mono text-xs tracking-widest uppercase block mb-3"
             style="color: var(--muted)"
           >
-            Language
+            <span data-i18n="label_language">Language</span>
           </label>
           <select
             id="langSelect"
@@ -237,67 +240,92 @@
             class="mono text-xs tracking-widest uppercase block mb-3"
             style="color: var(--muted)"
           >
-            Professional Field
+            <span data-i18n="label_field">Professional Field</span>
           </label>
           <select
             id="topicSelect"
             class="custom-select w-full rounded-sm px-4 py-3 mb-6"
           >
-            <option value="" disabled selected>— Choose your field —</option>
-            <option data-en="law legal" data-pt="direito juridico legislacao">
+            <option value="" disabled selected data-i18n="field_placeholder">
+              — Choose your field —
+            </option>
+            <option
+              data-en="law legal"
+              data-pt="direito juridico legislacao"
+              data-label-en="⚖️  Law &amp; Legal"
+              data-label-pt="⚖️  Direito &amp; Jurídico"
+            >
               ⚖️ Law &amp; Legal
             </option>
             <option
               data-en="technology artificial intelligence software"
               data-pt="tecnologia inteligencia artificial software"
+              data-label-en="💻  Technology &amp; AI"
+              data-label-pt="💻  Tecnologia &amp; IA"
             >
               💻 Technology &amp; AI
             </option>
             <option
               data-en="finance investing markets economy"
               data-pt="financas investimentos mercado economia"
+              data-label-en="📈  Finance &amp; Markets"
+              data-label-pt="📈  Finanças &amp; Mercados"
             >
               📈 Finance &amp; Markets
             </option>
             <option
               data-en="healthcare medicine pharmaceutical"
               data-pt="saude medicina farmaceutica"
+              data-label-en="🏥  Healthcare &amp; Medicine"
+              data-label-pt="🏥  Saúde &amp; Medicina"
             >
               🏥 Healthcare &amp; Medicine
             </option>
             <option
               data-en="marketing advertising brand"
               data-pt="marketing publicidade marca"
+              data-label-en="📣  Marketing &amp; Advertising"
+              data-label-pt="📣  Marketing &amp; Publicidade"
             >
               📣 Marketing &amp; Advertising
             </option>
             <option
               data-en="real estate property housing"
               data-pt="imoveis mercado imobiliario habitacao"
+              data-label-en="🏢  Real Estate"
+              data-label-pt="🏢  Mercado Imobiliário"
             >
               🏢 Real Estate
             </option>
             <option
               data-en="cybersecurity data privacy"
               data-pt="ciberseguranca privacidade dados"
+              data-label-en="🔐  Cybersecurity"
+              data-label-pt="🔐  Cibersegurança"
             >
               🔐 Cybersecurity
             </option>
             <option
               data-en="startups venture capital entrepreneurship"
               data-pt="startups capital de risco empreendedorismo"
+              data-label-en="🚀  Startups &amp; VC"
+              data-label-pt="🚀  Startups &amp; Capital"
             >
               🚀 Startups &amp; VC
             </option>
             <option
               data-en="energy climate sustainability"
               data-pt="energia clima sustentabilidade"
+              data-label-en="🌱  Energy &amp; Sustainability"
+              data-label-pt="🌱  Energia &amp; Sustentabilidade"
             >
               🌱 Energy &amp; Sustainability
             </option>
             <option
               data-en="human resources hiring workforce"
-              data-pt="recursos humanos contratacao mercado de trabalho"
+              data-pt="recursos humanos recrutamento emprego trabalho CLT"
+              data-label-en="👥  HR &amp; Workforce"
+              data-label-pt="👥  RH &amp; Mercado de Trabalho"
             >
               👥 HR &amp; Workforce
             </option>
@@ -307,17 +335,17 @@
             class="mono text-xs tracking-widest uppercase block mb-3"
             style="color: var(--muted)"
           >
-            How far back to look
+            <span data-i18n="label_time">How far back to look</span>
           </label>
           <select
             id="timeSelect"
             class="custom-select w-full rounded-sm px-4 py-3 mb-6"
           >
-            <option value="1">Last 24 hours</option>
-            <option value="7" selected>Last 7 days</option>
-            <option value="14">Last 2 weeks</option>
-            <option value="30">Last 30 days</option>
-            <option value="0">No limit</option>
+            <option value="1" data-i18n="time_1d">Last 24 hours</option>
+            <option value="7" data-i18n="time_7d">Last 7 days</option>
+            <option value="14" data-i18n="time_14d">Last 2 weeks</option>
+            <option value="30" data-i18n="time_30d">Last 30 days</option>
+            <option value="0" selected data-i18n="time_0">No limit</option>
           </select>
 
           <button
@@ -325,7 +353,7 @@
             class="btn-main w-full py-3 rounded-sm"
             disabled
           >
-            Get My Digest
+            <span data-i18n="btn_fetch">Get My Digest</span>
           </button>
         </div>
       </section>
@@ -336,8 +364,9 @@
       <!-- Footer -->
       <footer class="mt-16 pt-6" style="border-top: 1px solid var(--border)">
         <p class="mono text-xs" style="color: var(--muted)">
-          Powered by Google News RSS &nbsp;·&nbsp; No tracking &nbsp;·&nbsp; No
-          paywall
+          <span data-i18n="footer"
+            >Powered by Google News RSS · No tracking · No paywall</span
+          >
         </p>
       </footer>
     </div>
@@ -402,19 +431,92 @@
       const fetchBtn = document.getElementById("fetchBtn");
       const resultsEl = document.getElementById("results");
 
-      // Auto-detect browser language
+      // ─── i18n translations ───────────────────────────────────────────────────
+      const TRANSLATIONS = {
+        "en-US": {
+          tagline: "Morning Intelligence",
+          subtitle:
+            "Select your professional field and get an instant digest of today's most relevant headlines — distilled to 3 key stories.",
+          label_language: "Language",
+          label_field: "Professional Field",
+          label_time: "How far back to look",
+          field_placeholder: "— Choose your field —",
+          time_1d: "Last 24 hours",
+          time_7d: "Last 7 days",
+          time_14d: "Last 2 weeks",
+          time_30d: "Last 30 days",
+          time_0: "No limit",
+          btn_fetch: "Get My Digest",
+          footer: "Powered by Google News RSS · No tracking · No paywall",
+          fetching: "Fetching…",
+          top_stories: "Top Stories in",
+          no_stories:
+            "No stories found within the selected time window. Try a wider range.",
+          fetch_failed: "All proxies failed. Last error:",
+          error_label: "Error",
+          cors_note:
+            "Note: Some browsers block CORS requests when opening HTML files directly (file://). Try serving via a local server (e.g. npx serve . in VS Code terminal).",
+        },
+        "pt-BR": {
+          tagline: "Inteligência Matinal",
+          subtitle:
+            "Selecione sua área profissional e receba um resumo instantâneo das manchetes mais relevantes do dia — destiladas em 3 histórias principais.",
+          label_language: "Idioma",
+          label_field: "Área Profissional",
+          label_time: "Período de busca",
+          field_placeholder: "— Escolha sua área —",
+          time_1d: "Últimas 24 horas",
+          time_7d: "Últimos 7 dias",
+          time_14d: "Últimas 2 semanas",
+          time_30d: "Últimos 30 dias",
+          time_0: "Sem limite",
+          btn_fetch: "Ver meu resumo",
+          footer: "Powered by Google News RSS · Sem rastreamento · Sem paywall",
+          fetching: "Buscando…",
+          top_stories: "Principais notícias em",
+          no_stories:
+            "Nenhuma notícia encontrada no período selecionado. Tente um intervalo maior.",
+          fetch_failed: "Todos os proxies falharam. Último erro:",
+          error_label: "Erro",
+          cors_note:
+            "Nota: Alguns navegadores bloqueiam requisições CORS ao abrir arquivos HTML diretamente (file://). Tente servir via servidor local (ex: npx serve . no terminal do VS Code).",
+        },
+      };
+
+      function applyTranslations() {
+        const t = TRANSLATIONS[langSelect.value] || TRANSLATIONS["en-US"];
+        const isPt = langSelect.value === "pt-BR";
+
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.getAttribute("data-i18n");
+          if (t[key] !== undefined) el.textContent = t[key];
+        });
+
+        // Translate topic option labels
+        topicSelect.querySelectorAll("option[data-label-en]").forEach((opt) => {
+          const label = isPt
+            ? opt.getAttribute("data-label-pt")
+            : opt.getAttribute("data-label-en");
+          if (label) opt.innerHTML = label;
+        });
+
+        // Reset placeholder
+        const placeholder = topicSelect.querySelector('option[value=""]');
+        if (placeholder) placeholder.textContent = t.field_placeholder;
+      }
+
+      // Auto-detect browser language then apply translations
       (function detectLang() {
         const lang = (
           navigator.language ||
           navigator.userLanguage ||
           "en-US"
         ).toLowerCase();
-        if (lang.startsWith("pt")) {
-          langSelect.value = "pt-BR";
-        } else {
-          langSelect.value = "en-US";
-        }
+        langSelect.value = lang.startsWith("pt") ? "pt-BR" : "en-US";
+        applyTranslations();
       })();
+
+      langSelect.addEventListener("change", applyTranslations);
 
       topicSelect.addEventListener("change", () => {
         fetchBtn.disabled = !topicSelect.value;
@@ -432,8 +534,8 @@
 
         try {
           const items = await fetchGoogleNews(topic);
-          if (!items.length)
-            throw new Error("No stories found for this topic.");
+          const t = TRANSLATIONS[langSelect.value] || TRANSLATIONS["en-US"];
+          if (!items.length) throw new Error(t.no_stories);
 
           const top3 = rankAndPick(items, 3);
           renderResults(top3, topic);
@@ -480,14 +582,14 @@
           }
         }
 
-        if (!xmlText)
-          throw new Error(`All proxies failed. Last error: ${lastError}`);
+        const t2 = TRANSLATIONS[langSelect.value] || TRANSLATIONS["en-US"];
+        if (!xmlText) throw new Error(`${t2.fetch_failed} ${lastError}`);
 
         const xml = new DOMParser().parseFromString(xmlText, "text/xml");
         const items = [...xml.querySelectorAll("item")];
 
         return items
-          .slice(0, 30)
+          .slice(0, 50)
           .map((item) => {
             const title =
               item.querySelector("title")?.textContent?.trim() || "";
@@ -524,10 +626,8 @@
           return age <= maxAgeMs;
         });
 
-        if (!filtered.length)
-          throw new Error(
-            `No stories found within the selected time window. Try a wider range.`,
-          );
+        const tw = TRANSLATIONS[langSelect.value] || TRANSLATIONS["en-US"];
+        if (!filtered.length) throw new Error(tw.no_stories);
 
         // Build term frequency map across all headlines (to surface "big" stories)
         const termFreq = {};
@@ -581,7 +681,7 @@
         for (const item of items) {
           if (picked.length >= n) break;
           const isDup = picked.some(
-            (p) => similarity(p.title, item.title) > 0.55,
+            (p) => similarity(p.title, item.title) > 0.7,
           );
           if (!isDup) picked.push(item);
         }
@@ -615,9 +715,12 @@
 
       // ─── Render ───────────────────────────────────────────────────────────────
       function renderResults(stories, topic) {
-        const label = topicSelect.options[
-          topicSelect.selectedIndex
-        ].text.replace(/^.\s+/, "");
+        const selOpt = topicSelect.options[topicSelect.selectedIndex];
+        const isPtResult = langSelect.value === "pt-BR";
+        const rawLabel = isPtResult
+          ? selOpt.getAttribute("data-label-pt") || selOpt.text
+          : selOpt.getAttribute("data-label-en") || selOpt.text;
+        const label = rawLabel.replace(/^.\s+/, "").replace(/&amp;/g, "&");
         const dateStr = new Date().toLocaleDateString("en-US", {
           weekday: "long",
           month: "long",
@@ -628,7 +731,7 @@
         <div class="mb-6">
           <p class="mono text-xs tracking-widest uppercase mb-1" style="color: var(--muted);">${dateStr}</p>
           <h2 style="font-family:'Playfair Display',serif; font-size:1.6rem; color:var(--text);">
-            Top Stories in <span style="color:var(--accent)">${label}</span>
+            ${(TRANSLATIONS[langSelect.value] || TRANSLATIONS["en-US"]).top_stories} <span style="color:var(--accent)">${label}</span>
           </h2>
         </div>
         <div id="cardContainer"></div>
@@ -664,14 +767,12 @@
       }
 
       function renderError(msg) {
+        const te = TRANSLATIONS[langSelect.value] || TRANSLATIONS["en-US"];
         resultsEl.innerHTML = `
         <div class="error-box rounded-sm p-5">
-          <p class="mono text-xs uppercase tracking-widest mb-1" style="color:#ff6b6b;">Error</p>
+          <p class="mono text-xs uppercase tracking-widest mb-1" style="color:#ff6b6b;">${te.error_label}</p>
           <p class="text-sm">${msg}</p>
-          <p class="text-xs mt-2" style="color:var(--muted);">
-            Note: Some browsers block CORS requests when opening HTML files directly (file://).
-            Try serving the file via a local server (e.g. <span class="mono">npx serve .</span> in VS Code terminal).
-          </p>
+          <p class="text-xs mt-2" style="color:var(--muted);">${te.cors_note}</p>
         </div>
       `;
       }
@@ -679,7 +780,8 @@
       function setLoading(on) {
         if (on) {
           fetchBtn.disabled = true;
-          fetchBtn.innerHTML = `<span class="spinner mr-2"></span><span>Fetching…</span>`;
+          const tl = TRANSLATIONS[langSelect.value] || TRANSLATIONS["en-US"];
+          fetchBtn.innerHTML = `<span class="spinner mr-2"></span><span>${tl.fetching}</span>`;
           fetchBtn.style.display = "flex";
           fetchBtn.style.alignItems = "center";
           fetchBtn.style.justifyContent = "center";
