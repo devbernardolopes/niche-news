@@ -476,11 +476,14 @@
 
       <!-- Footer -->
       <footer class="mt-16 pt-6" style="border-top: 1px solid var(--border)">
-        <p class="mono text-xs" style="color: var(--muted)">
-          <span data-i18n="footer"
-            >Powered by Google News RSS · No tracking · No paywall</span
-          >
-        </p>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <p class="mono text-xs" style="color: var(--muted)">
+            <span data-i18n="footer"
+              >Powered by Google News RSS · No tracking · No paywall</span
+            >
+          </p>
+          <div id="kofi-widget"></div>
+        </div>
       </footer>
     </div>
 
@@ -495,9 +498,9 @@
       //    {{story3_title}}, {{story3_source}}, {{story3_url}}, {{story3_snippet}}
       // 3. Go to Account → copy the Public Key
       const EMAILJS_CONFIG = {
-        publicKey: "rxabEgCkShgY5BZNK", // e.g. 'user_xxxxxxxxxxxx'
-        serviceId: "service_nkrb4ww", // e.g. 'service_xxxxxxx'
-        templateId: "template_3ik16tq", // e.g. 'template_xxxxxxx'
+        publicKey: "rxabEgCkShgY5BZNK",
+        serviceId: "service_nkrb4ww",
+        templateId: "template_3ik16tq",
       };
       const EMAILJS_READY = EMAILJS_CONFIG.publicKey !== "YOUR_PUBLIC_KEY";
       if (EMAILJS_READY) emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
@@ -1056,6 +1059,14 @@
         if (h < 24) return `${h}h ago`;
         return `${Math.floor(h / 24)}d ago`;
       }
+    </script>
+    <script
+      type="text/javascript"
+      src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"
+    ></script>
+    <script type="text/javascript">
+      kofiwidget2.init("Support me on Ko-fi", "#72a4f2", "V7V21OVINK");
+      document.getElementById("kofi-widget").innerHTML = kofiwidget2.draw();
     </script>
   </body>
 </html>
