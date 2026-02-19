@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Briefr — Your Morning Digest</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap"
@@ -191,6 +192,75 @@
         background: rgba(255, 107, 107, 0.06);
         color: #ff9e9e;
       }
+
+      /* Email panel */
+      .email-panel {
+        background-color: var(--surface);
+        border: 1px solid var(--border);
+        border-top: 2px solid var(--accent);
+      }
+
+      .email-input {
+        background-color: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: "IBM Plex Sans", sans-serif;
+        font-size: 0.95rem;
+        font-weight: 300;
+        width: 100%;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .email-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(200, 245, 102, 0.15);
+      }
+      .email-input::placeholder {
+        color: var(--muted);
+      }
+
+      .btn-send {
+        background-color: transparent;
+        color: var(--accent);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.8rem;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border: 1px solid var(--accent);
+        cursor: pointer;
+        white-space: nowrap;
+        transition:
+          background-color 0.15s,
+          color 0.15s;
+        padding: 0 18px;
+        height: 46px;
+        border-radius: 2px;
+      }
+      .btn-send:hover {
+        background-color: var(--accent);
+        color: #0d0f0e;
+      }
+      .btn-send:disabled {
+        border-color: var(--border);
+        color: var(--muted);
+        cursor: not-allowed;
+      }
+
+      .send-status {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.75rem;
+        letter-spacing: 0.04em;
+        min-height: 1.2em;
+      }
+      .send-status.ok {
+        color: var(--accent);
+      }
+      .send-status.err {
+        color: #ff9e9e;
+      }
     </style>
   </head>
   <body>
@@ -361,6 +431,49 @@
       <!-- Results -->
       <section id="results"></section>
 
+      <!-- Email panel (hidden until results are shown) -->
+      <section
+        id="emailPanel"
+        class="email-panel rounded-sm p-6 mb-8"
+        style="display: none"
+      >
+        <p
+          class="mono text-xs tracking-widest uppercase mb-1"
+          style="color: var(--accent)"
+          data-i18n="email_label"
+        >
+          Send to your inbox
+        </p>
+        <p
+          class="text-sm mb-4"
+          style="color: var(--muted)"
+          data-i18n="email_sub"
+        >
+          Get this digest delivered to your e-mail.
+        </p>
+        <div class="flex gap-3 mb-3">
+          <input
+            id="emailInput"
+            type="email"
+            class="email-input rounded-sm px-4 py-3"
+            data-i18n-placeholder="email_placeholder"
+            placeholder="your@email.com"
+          />
+          <button id="sendBtn" class="btn-send" data-i18n="btn_send">
+            Send
+          </button>
+        </div>
+        <p id="sendStatus" class="send-status"></p>
+        <p
+          class="text-xs mt-4"
+          style="color: var(--muted)"
+          data-i18n="email_config_note"
+        >
+          ⚙️ To enable sending, add your EmailJS credentials in the CONFIG
+          section of the script.
+        </p>
+      </section>
+
       <!-- Footer -->
       <footer class="mt-16 pt-6" style="border-top: 1px solid var(--border)">
         <p class="mono text-xs" style="color: var(--muted)">
@@ -372,6 +485,23 @@
     </div>
 
     <script>
+      // ─── EmailJS Config ──────────────────────────────────────────────────────────
+      // Sign up free at https://www.emailjs.com then fill in your credentials below.
+      // 1. Create an Email Service (Gmail, Outlook, etc.) → copy the Service ID
+      // 2. Create an Email Template → copy the Template ID
+      //    Template variables available: {{to_email}}, {{field}}, {{date}},
+      //    {{story1_title}}, {{story1_source}}, {{story1_url}}, {{story1_snippet}},
+      //    {{story2_title}}, {{story2_source}}, {{story2_url}}, {{story2_snippet}},
+      //    {{story3_title}}, {{story3_source}}, {{story3_url}}, {{story3_snippet}}
+      // 3. Go to Account → copy the Public Key
+      const EMAILJS_CONFIG = {
+        publicKey: "rxabEgCkShgY5BZNK", // e.g. 'user_xxxxxxxxxxxx'
+        serviceId: "service_nkrb4ww", // e.g. 'service_xxxxxxx'
+        templateId: "template_3ik16tq", // e.g. 'template_xxxxxxx'
+      };
+      const EMAILJS_READY = EMAILJS_CONFIG.publicKey !== "YOUR_PUBLIC_KEY";
+      if (EMAILJS_READY) emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
+
       // ─── Config ───────────────────────────────────────────────────────────────
       // Source authority scoring — higher = more trusted
       const SOURCE_SCORES = {
@@ -448,6 +578,16 @@
           time_0: "No limit",
           btn_fetch: "Get My Digest",
           footer: "Powered by Google News RSS · No tracking · No paywall",
+          email_label: "Send to your inbox",
+          email_sub: "Get this digest delivered to your e-mail.",
+          email_placeholder: "your@email.com",
+          btn_send: "Send",
+          email_config_note:
+            "⚙️ To enable sending, add your EmailJS credentials in the CONFIG section of the script.",
+          sending: "Sending…",
+          sent_ok: "✓ Digest sent! Check your inbox.",
+          sent_err: "✗ Failed to send. Check your EmailJS credentials.",
+          email_invalid: "✗ Please enter a valid e-mail address.",
           fetching: "Fetching…",
           top_stories: "Top Stories in",
           no_stories:
@@ -472,6 +612,16 @@
           time_0: "Sem limite",
           btn_fetch: "Ver meu resumo",
           footer: "Powered by Google News RSS · Sem rastreamento · Sem paywall",
+          email_label: "Enviar para sua caixa de entrada",
+          email_sub: "Receba este resumo no seu e-mail.",
+          email_placeholder: "seu@email.com",
+          btn_send: "Enviar",
+          email_config_note:
+            "⚙️ Para habilitar o envio, adicione suas credenciais do EmailJS na seção CONFIG do script.",
+          sending: "Enviando…",
+          sent_ok: "✓ Resumo enviado! Verifique sua caixa de entrada.",
+          sent_err: "✗ Falha no envio. Verifique suas credenciais do EmailJS.",
+          email_invalid: "✗ Por favor, insira um endereço de e-mail válido.",
           fetching: "Buscando…",
           top_stories: "Principais notícias em",
           no_stories:
@@ -503,6 +653,10 @@
         // Reset placeholder
         const placeholder = topicSelect.querySelector('option[value=""]');
         if (placeholder) placeholder.textContent = t.field_placeholder;
+
+        // Translate email input placeholder
+        const emailInput = document.getElementById("emailInput");
+        if (emailInput) emailInput.placeholder = t.email_placeholder;
       }
 
       // Auto-detect browser language then apply translations
@@ -570,9 +724,16 @@
 
         for (const proxy of PROXIES) {
           try {
-            const res = await fetch(proxy.build(rssUrl), {
-              signal: AbortSignal.timeout(8000),
-            });
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 8000);
+            let res;
+            try {
+              res = await fetch(proxy.build(rssUrl), {
+                signal: controller.signal,
+              });
+            } finally {
+              clearTimeout(timer);
+            }
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             xmlText = await proxy.extract(res);
             if (xmlText && xmlText.includes("<item>")) break;
@@ -737,6 +898,26 @@
         <div id="cardContainer"></div>
       `;
 
+        // Show email panel now that we have results
+        const emailPanel = document.getElementById("emailPanel");
+        if (emailPanel) {
+          emailPanel.style.display = "block";
+          // Store stories on panel for the send function to access
+          emailPanel._stories = stories;
+          emailPanel._label = label;
+          // Hide config note if EmailJS is properly configured
+          const note = emailPanel.querySelector(
+            '[data-i18n="email_config_note"]',
+          );
+          if (note) note.style.display = EMAILJS_READY ? "none" : "block";
+          // Reset status
+          const status = document.getElementById("sendStatus");
+          if (status) {
+            status.textContent = "";
+            status.className = "send-status";
+          }
+        }
+
         const container = document.getElementById("cardContainer");
 
         stories.forEach((story, i) => {
@@ -764,6 +945,71 @@
         `;
           container.appendChild(card);
         });
+      }
+
+      // ─── Send digest via EmailJS ──────────────────────────────────────────────
+      document.getElementById("sendBtn").addEventListener("click", sendDigest);
+
+      async function sendDigest() {
+        const t = TRANSLATIONS[langSelect.value] || TRANSLATIONS["en-US"];
+        const email = document.getElementById("emailInput").value.trim();
+        const status = document.getElementById("sendStatus");
+        const sendBtn = document.getElementById("sendBtn");
+        const panel = document.getElementById("emailPanel");
+
+        // Basic validation
+        if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+          status.textContent = t.email_invalid;
+          status.className = "send-status err";
+          return;
+        }
+
+        if (!EMAILJS_READY) {
+          status.textContent = t.email_config_note;
+          status.className = "send-status err";
+          return;
+        }
+
+        sendBtn.disabled = true;
+        status.textContent = t.sending;
+        status.className = "send-status";
+
+        const stories = panel._stories || [];
+        const label = panel._label || "";
+        const date = new Date().toLocaleDateString(
+          langSelect.value === "pt-BR" ? "pt-BR" : "en-US",
+          { weekday: "long", year: "numeric", month: "long", day: "numeric" },
+        );
+
+        const params = {
+          to_email: email,
+          field: label,
+          date: date,
+        };
+        [0, 1, 2].forEach((i) => {
+          const s = stories[i];
+          const n = i + 1;
+          params[`story${n}_title`] = s ? s.title : "";
+          params[`story${n}_source`] = s ? s.source : "";
+          params[`story${n}_url`] = s ? s.link : "";
+          params[`story${n}_snippet`] = s ? cleanSnippet(s.description) : "";
+        });
+
+        try {
+          await emailjs.send(
+            EMAILJS_CONFIG.serviceId,
+            EMAILJS_CONFIG.templateId,
+            params,
+          );
+          status.textContent = t.sent_ok;
+          status.className = "send-status ok";
+        } catch (err) {
+          console.error("EmailJS error:", err);
+          status.textContent = t.sent_err;
+          status.className = "send-status err";
+        } finally {
+          sendBtn.disabled = false;
+        }
       }
 
       function renderError(msg) {
