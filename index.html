@@ -256,6 +256,23 @@
             </option>
           </select>
 
+          <label
+            class="mono text-xs tracking-widest uppercase block mb-3"
+            style="color: var(--muted)"
+          >
+            How far back to look
+          </label>
+          <select
+            id="timeSelect"
+            class="custom-select w-full rounded-sm px-4 py-3 mb-6"
+          >
+            <option value="1">Last 24 hours</option>
+            <option value="7" selected>Last 7 days</option>
+            <option value="14">Last 2 weeks</option>
+            <option value="30">Last 30 days</option>
+            <option value="0">No limit</option>
+          </select>
+
           <button
             id="fetchBtn"
             class="btn-main w-full py-3 rounded-sm"
@@ -310,11 +327,30 @@
         "stat news": 7,
       };
 
-      // CORS proxy (free, no-auth required for RSS)
-      const PROXY = "https://api.allorigins.win/get?url=";
+      // CORS proxy list — tried in order until one works
+      const PROXIES = [
+        {
+          build: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+          extract: async (res) => res.text(),
+        },
+        {
+          build: (url) =>
+            `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+          extract: async (res) => {
+            const j = await res.json();
+            return j.contents;
+          },
+        },
+        {
+          build: (url) =>
+            `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`,
+          extract: async (res) => res.text(),
+        },
+      ];
 
       // ─── DOM refs ─────────────────────────────────────────────────────────────
       const topicSelect = document.getElementById("topicSelect");
+      const timeSelect = document.getElementById("timeSelect");
       const fetchBtn = document.getElementById("fetchBtn");
       const resultsEl = document.getElementById("results");
 
@@ -348,15 +384,32 @@
 
       // ─── Fetch & parse Google News RSS ────────────────────────────────────────
       async function fetchGoogleNews(query) {
-        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
-        const proxyUrl = PROXY + encodeURIComponent(rssUrl);
+        // Pass 'when' param to Google News so filtering happens at the source too
+        const maxDays = parseInt(timeSelect.value);
+        const whenParam = maxDays > 0 ? `&when=${maxDays}d` : "";
+        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}${whenParam}&hl=en-US&gl=US&ceid=US:en`;
 
-        const res = await fetch(proxyUrl);
-        if (!res.ok)
-          throw new Error("Failed to fetch news. Check your connection.");
+        let xmlText = null;
+        let lastError = "";
 
-        const data = await res.json();
-        const xml = new DOMParser().parseFromString(data.contents, "text/xml");
+        for (const proxy of PROXIES) {
+          try {
+            const res = await fetch(proxy.build(rssUrl), {
+              signal: AbortSignal.timeout(8000),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            xmlText = await proxy.extract(res);
+            if (xmlText && xmlText.includes("<item>")) break;
+            xmlText = null;
+          } catch (e) {
+            lastError = e.message;
+          }
+        }
+
+        if (!xmlText)
+          throw new Error(`All proxies failed. Last error: ${lastError}`);
+
+        const xml = new DOMParser().parseFromString(xmlText, "text/xml");
         const items = [...xml.querySelectorAll("item")];
 
         return items
@@ -382,22 +435,38 @@
         const now = Date.now();
         const topic = topicSelect.value.toLowerCase();
         const topicTerms = topic.split(/\s+/);
+        const maxDays = parseInt(timeSelect.value);
+        const maxAgeMs = maxDays > 0 ? maxDays * 24 * 60 * 60 * 1000 : Infinity;
+
+        // Filter by time window first
+        const filtered = items.filter((item) => {
+          const age = now - new Date(item.pubDate).getTime();
+          return age <= maxAgeMs;
+        });
+
+        if (!filtered.length)
+          throw new Error(
+            `No stories found within the selected time window. Try a wider range.`,
+          );
 
         // Build term frequency map across all headlines (to surface "big" stories)
         const termFreq = {};
-        items.forEach((item) => {
+        filtered.forEach((item) => {
           tokenize(item.title).forEach((t) => {
             if (t.length > 3) termFreq[t] = (termFreq[t] || 0) + 1;
           });
         });
 
-        const scored = items.map((item) => {
+        // Recency decay is relative to the selected window so short windows still spread scores
+        const windowHours = maxDays > 0 ? maxDays * 24 : 720;
+
+        const scored = filtered.map((item) => {
           let score = 0;
 
-          // 1. Recency (max 20 pts) — exponential decay over 48h
-          const age =
-            (now - new Date(item.pubDate).getTime()) / (1000 * 60 * 60); // hours
-          score += Math.max(0, 20 - age * 0.4);
+          // 1. Recency (max 20 pts) — decays linearly across the chosen window
+          const ageHours =
+            (now - new Date(item.pubDate).getTime()) / (1000 * 60 * 60);
+          score += Math.max(0, 20 * (1 - ageHours / windowHours));
 
           // 2. Source authority (max 10 pts)
           const srcLower = item.source.toLowerCase();
