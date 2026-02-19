@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Briefr — Your Morning Digest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0d0f0e;
+        --surface: #141614;
+        --border: #232623;
+        --accent: #c8f566;
+        --accent-dim: #a8d44a;
+        --text: #e8ede8;
+        --muted: #6b756b;
+        --card: #181b18;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: var(--bg);
+        color: var(--text);
+        font-family: "IBM Plex Sans", sans-serif;
+        font-weight: 300;
+        min-height: 100vh;
+        margin: 0;
+      }
+
+      /* Subtle grid texture */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(200, 245, 102, 0.02) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(200, 245, 102, 0.02) 1px, transparent 1px);
+        background-size: 48px 48px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .content {
+        position: relative;
+        z-index: 1;
+      }
+
+      h1 {
+        font-family: "Playfair Display", serif;
+        font-weight: 900;
+      }
+
+      .mono {
+        font-family: "IBM Plex Mono", monospace;
+      }
+
+      /* Custom select */
+      .custom-select {
+        appearance: none;
+        background-color: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: "IBM Plex Sans", sans-serif;
+        font-size: 0.95rem;
+        font-weight: 300;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c8f566' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+      }
+      .custom-select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(200, 245, 102, 0.15);
+      }
+      .custom-select option {
+        background-color: #1a1e1a;
+      }
+
+      /* Button */
+      .btn-main {
+        background-color: var(--accent);
+        color: #0d0f0e;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border: none;
+        cursor: pointer;
+        transition:
+          background-color 0.15s,
+          transform 0.1s;
+      }
+      .btn-main:hover {
+        background-color: var(--accent-dim);
+        transform: translateY(-1px);
+      }
+      .btn-main:active {
+        transform: translateY(0);
+      }
+      .btn-main:disabled {
+        background-color: var(--border);
+        color: var(--muted);
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Result cards */
+      .story-card {
+        background-color: var(--card);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--accent);
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        animation: slideIn 0.4s ease forwards;
+        opacity: 0;
+      }
+      .story-card:nth-child(1) {
+        animation-delay: 0.05s;
+      }
+      .story-card:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+      .story-card:nth-child(3) {
+        animation-delay: 0.25s;
+      }
+      .story-card:hover {
+        border-color: var(--accent);
+        box-shadow: 0 4px 24px rgba(200, 245, 102, 0.06);
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Spinner */
+      .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Divider */
+      .accent-line {
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent), transparent);
+        width: 60px;
+      }
+
+      /* Tag pill */
+      .tag {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.7rem;
+        background-color: rgba(200, 245, 102, 0.08);
+        color: var(--accent);
+        border: 1px solid rgba(200, 245, 102, 0.2);
+        letter-spacing: 0.06em;
+      }
+
+      .error-box {
+        border: 1px solid #ff6b6b44;
+        background: rgba(255, 107, 107, 0.06);
+        color: #ff9e9e;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="content max-w-2xl mx-auto px-6 py-16">
+      <!-- Header -->
+      <header class="mb-14">
+        <div class="accent-line mb-6"></div>
+        <p
+          class="mono text-xs tracking-widest uppercase mb-3"
+          style="color: var(--accent)"
+        >
+          Morning Intelligence
+        </p>
+        <h1 class="text-5xl leading-tight mb-4" style="color: var(--text)">
+          Briefr
+        </h1>
+        <p class="text-base leading-relaxed" style="color: var(--muted)">
+          Select your professional field and get an instant digest of today's
+          most relevant headlines — distilled to 3 key stories.
+        </p>
+      </header>
+
+      <!-- Control panel -->
+      <section class="mb-10">
+        <div
+          class="p-6 rounded-sm"
+          style="background: var(--surface); border: 1px solid var(--border)"
+        >
+          <label
+            class="mono text-xs tracking-widest uppercase block mb-3"
+            style="color: var(--muted)"
+          >
+            Professional Field
+          </label>
+          <select
+            id="topicSelect"
+            class="custom-select w-full rounded-sm px-4 py-3 mb-6"
+          >
+            <option value="" disabled selected>— Choose your field —</option>
+            <option value="law legal">⚖️ Law &amp; Legal</option>
+            <option value="technology artificial intelligence software">
+              💻 Technology &amp; AI
+            </option>
+            <option value="finance investing markets economy">
+              📈 Finance &amp; Markets
+            </option>
+            <option value="healthcare medicine pharmaceutical">
+              🏥 Healthcare &amp; Medicine
+            </option>
+            <option value="marketing advertising brand">
+              📣 Marketing &amp; Advertising
+            </option>
+            <option value="real estate property housing">🏢 Real Estate</option>
+            <option value="cybersecurity data privacy">🔐 Cybersecurity</option>
+            <option value="startups venture capital entrepreneurship">
+              🚀 Startups &amp; VC
+            </option>
+            <option value="energy climate sustainability">
+              🌱 Energy &amp; Sustainability
+            </option>
+            <option value="human resources hiring workforce">
+              👥 HR &amp; Workforce
+            </option>
+          </select>
+
+          <button
+            id="fetchBtn"
+            class="btn-main w-full py-3 rounded-sm"
+            disabled
+          >
+            Get My Digest
+          </button>
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section id="results"></section>
+
+      <!-- Footer -->
+      <footer class="mt-16 pt-6" style="border-top: 1px solid var(--border)">
+        <p class="mono text-xs" style="color: var(--muted)">
+          Powered by Google News RSS &nbsp;·&nbsp; No tracking &nbsp;·&nbsp; No
+          paywall
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      // ─── Config ───────────────────────────────────────────────────────────────
+      // Source authority scoring — higher = more trusted
+      const SOURCE_SCORES = {
+        reuters: 10,
+        bloomberg: 10,
+        "financial times": 10,
+        "ft.com": 10,
+        "wall street journal": 9,
+        wsj: 9,
+        "new york times": 9,
+        nytimes: 9,
+        "washington post": 9,
+        "the economist": 9,
+        bbc: 8,
+        "associated press": 8,
+        "ap news": 8,
+        cnbc: 8,
+        forbes: 7,
+        techcrunch: 7,
+        wired: 7,
+        "ars technica": 7,
+        "the verge": 7,
+        "harvard business review": 8,
+        hbr: 8,
+        axios: 7,
+        politico: 7,
+        nature: 9,
+        science: 9,
+        "stat news": 7,
+      };
+
+      // CORS proxy (free, no-auth required for RSS)
+      const PROXY = "https://api.allorigins.win/get?url=";
+
+      // ─── DOM refs ─────────────────────────────────────────────────────────────
+      const topicSelect = document.getElementById("topicSelect");
+      const fetchBtn = document.getElementById("fetchBtn");
+      const resultsEl = document.getElementById("results");
+
+      topicSelect.addEventListener("change", () => {
+        fetchBtn.disabled = !topicSelect.value;
+      });
+
+      fetchBtn.addEventListener("click", runDigest);
+
+      // ─── Main flow ────────────────────────────────────────────────────────────
+      async function runDigest() {
+        const topic = topicSelect.value;
+        if (!topic) return;
+
+        setLoading(true);
+        resultsEl.innerHTML = "";
+
+        try {
+          const items = await fetchGoogleNews(topic);
+          if (!items.length)
+            throw new Error("No stories found for this topic.");
+
+          const top3 = rankAndPick(items, 3);
+          renderResults(top3, topic);
+        } catch (err) {
+          renderError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      // ─── Fetch & parse Google News RSS ────────────────────────────────────────
+      async function fetchGoogleNews(query) {
+        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+        const proxyUrl = PROXY + encodeURIComponent(rssUrl);
+
+        const res = await fetch(proxyUrl);
+        if (!res.ok)
+          throw new Error("Failed to fetch news. Check your connection.");
+
+        const data = await res.json();
+        const xml = new DOMParser().parseFromString(data.contents, "text/xml");
+        const items = [...xml.querySelectorAll("item")];
+
+        return items
+          .slice(0, 30)
+          .map((item) => {
+            const title =
+              item.querySelector("title")?.textContent?.trim() || "";
+            const link = item.querySelector("link")?.textContent?.trim() || "";
+            const pubDate =
+              item.querySelector("pubDate")?.textContent?.trim() || "";
+            const sourceEl = item.querySelector("source");
+            const source = sourceEl?.textContent?.trim() || extractDomain(link);
+            const description =
+              item.querySelector("description")?.textContent?.trim() || "";
+
+            return { title, link, pubDate, source, description };
+          })
+          .filter((i) => i.title);
+      }
+
+      // ─── Ranking algorithm ────────────────────────────────────────────────────
+      function rankAndPick(items, n) {
+        const now = Date.now();
+        const topic = topicSelect.value.toLowerCase();
+        const topicTerms = topic.split(/\s+/);
+
+        // Build term frequency map across all headlines (to surface "big" stories)
+        const termFreq = {};
+        items.forEach((item) => {
+          tokenize(item.title).forEach((t) => {
+            if (t.length > 3) termFreq[t] = (termFreq[t] || 0) + 1;
+          });
+        });
+
+        const scored = items.map((item) => {
+          let score = 0;
+
+          // 1. Recency (max 20 pts) — exponential decay over 48h
+          const age =
+            (now - new Date(item.pubDate).getTime()) / (1000 * 60 * 60); // hours
+          score += Math.max(0, 20 - age * 0.4);
+
+          // 2. Source authority (max 10 pts)
+          const srcLower = item.source.toLowerCase();
+          const authorityScore = Object.entries(SOURCE_SCORES).find(([k]) =>
+            srcLower.includes(k),
+          );
+          score += authorityScore ? authorityScore[1] : 3;
+
+          // 3. Topic relevance in title (max 8 pts)
+          const titleLower = item.title.toLowerCase();
+          topicTerms.forEach((t) => {
+            if (titleLower.includes(t)) score += 8 / topicTerms.length;
+          });
+
+          // 4. Term cluster bonus — words appearing in many headlines are "the story of the day"
+          const titleTokens = tokenize(item.title).filter((t) => t.length > 4);
+          titleTokens.forEach((t) => {
+            if ((termFreq[t] || 0) >= 3) score += 1.5;
+          });
+
+          return { ...item, score };
+        });
+
+        // Sort desc, deduplicate by story similarity, take top n
+        scored.sort((a, b) => b.score - a.score);
+        return dedup(scored, n);
+      }
+
+      // Remove near-duplicate headlines
+      function dedup(items, n) {
+        const picked = [];
+        for (const item of items) {
+          if (picked.length >= n) break;
+          const isDup = picked.some(
+            (p) => similarity(p.title, item.title) > 0.55,
+          );
+          if (!isDup) picked.push(item);
+        }
+        return picked;
+      }
+
+      // Jaccard similarity on word sets
+      function similarity(a, b) {
+        const sa = new Set(tokenize(a));
+        const sb = new Set(tokenize(b));
+        const inter = [...sa].filter((x) => sb.has(x)).length;
+        const union = new Set([...sa, ...sb]).size;
+        return inter / union;
+      }
+
+      function tokenize(str) {
+        return str
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, "")
+          .split(/\s+/)
+          .filter(Boolean);
+      }
+
+      function extractDomain(url) {
+        try {
+          return new URL(url).hostname.replace("www.", "");
+        } catch {
+          return "Unknown";
+        }
+      }
+
+      // ─── Render ───────────────────────────────────────────────────────────────
+      function renderResults(stories, topic) {
+        const label = topicSelect.options[
+          topicSelect.selectedIndex
+        ].text.replace(/^.\s+/, "");
+        const dateStr = new Date().toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+        });
+
+        resultsEl.innerHTML = `
+        <div class="mb-6">
+          <p class="mono text-xs tracking-widest uppercase mb-1" style="color: var(--muted);">${dateStr}</p>
+          <h2 style="font-family:'Playfair Display',serif; font-size:1.6rem; color:var(--text);">
+            Top Stories in <span style="color:var(--accent)">${label}</span>
+          </h2>
+        </div>
+        <div id="cardContainer"></div>
+      `;
+
+        const container = document.getElementById("cardContainer");
+
+        stories.forEach((story, i) => {
+          const age = formatAge(story.pubDate);
+          const snippet = cleanSnippet(story.description);
+
+          const card = document.createElement("div");
+          card.className = "story-card rounded-sm p-5 mb-4";
+          card.innerHTML = `
+          <div class="flex items-start gap-4">
+            <span class="mono shrink-0 text-lg font-500 leading-none mt-0.5" style="color:var(--accent);">0${i + 1}</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-2 mb-2">
+                <span class="tag px-2 py-0.5 rounded-sm">${story.source}</span>
+                <span class="mono text-xs" style="color:var(--muted);">${age}</span>
+              </div>
+              <a href="${story.link}" target="_blank" rel="noopener"
+                 class="block text-base font-medium leading-snug hover:underline mb-2"
+                 style="color:var(--text); text-decoration-color:var(--accent);">
+                ${story.title}
+              </a>
+              ${snippet ? `<p class="text-sm leading-relaxed" style="color:var(--muted);">${snippet}</p>` : ""}
+            </div>
+          </div>
+        `;
+          container.appendChild(card);
+        });
+      }
+
+      function renderError(msg) {
+        resultsEl.innerHTML = `
+        <div class="error-box rounded-sm p-5">
+          <p class="mono text-xs uppercase tracking-widest mb-1" style="color:#ff6b6b;">Error</p>
+          <p class="text-sm">${msg}</p>
+          <p class="text-xs mt-2" style="color:var(--muted);">
+            Note: Some browsers block CORS requests when opening HTML files directly (file://).
+            Try serving the file via a local server (e.g. <span class="mono">npx serve .</span> in VS Code terminal).
+          </p>
+        </div>
+      `;
+      }
+
+      function setLoading(on) {
+        if (on) {
+          fetchBtn.disabled = true;
+          fetchBtn.innerHTML = `<span class="spinner mr-2"></span><span>Fetching…</span>`;
+          fetchBtn.style.display = "flex";
+          fetchBtn.style.alignItems = "center";
+          fetchBtn.style.justifyContent = "center";
+          fetchBtn.style.gap = "8px";
+        } else {
+          fetchBtn.disabled = false;
+          fetchBtn.textContent = "Get My Digest";
+        }
+      }
+
+      function cleanSnippet(html) {
+        const tmp = document.createElement("div");
+        tmp.innerHTML = html;
+        const text = tmp.textContent?.trim() || "";
+        return text.length > 20
+          ? text.slice(0, 180) + (text.length > 180 ? "…" : "")
+          : "";
+      }
+
+      function formatAge(pubDate) {
+        if (!pubDate) return "";
+        const diff = Date.now() - new Date(pubDate).getTime();
+        const h = Math.floor(diff / 36e5);
+        const m = Math.floor(diff / 6e4);
+        if (m < 60) return `${m}m ago`;
+        if (h < 24) return `${h}h ago`;
+        return `${Math.floor(h / 24)}d ago`;
+      }
+    </script>
+  </body>
+</html>
